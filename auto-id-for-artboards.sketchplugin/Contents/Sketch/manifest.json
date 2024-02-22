@@ -1,5 +1,10 @@
 {
+  "name": "Auto ID for Artboards",
+  "description": "Made for Oli 👋",
+  "identifier": "exposed.internals.auto-id-for-artboards",
   "author": "Dmitry Rodionov",
+  "authorEmail": "i.am.rodionovd@gmail.com",
+  "version": "2.0",
   "commands": [
     {
       "script": "script.js",
@@ -14,10 +19,5 @@
       "script": "script.js",
       "handler": "updateProjectPrefix"
     }
-  ],
-  "identifier": "exposed.internals.auto-id-for-artboards",
-  "version": "2.0",
-  "description": "Made for Oli 👋",
-  "authorEmail": "i.am.rodionovd@gmail.com",
-  "name": "Auto ID for Artboards"
+  ]  
 }
