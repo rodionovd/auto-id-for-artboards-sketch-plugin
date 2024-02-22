@@ -1,0 +1,15 @@
+{
+  "author" : "",
+  "commands" : [{
+      "script" : "script.js",
+      "name" : "Auto ID for Artboards",
+      "handlers": {
+        "onDocumentChanged": "onDocumentChanged"
+      }
+    }],
+  "identifier" : "exposed.internals.auto-id-for-artboards",
+  "version" : "1.0",
+  "description" : "",
+  "authorEmail" : "",
+  "name" : "Auto ID for Artboards"
+}
