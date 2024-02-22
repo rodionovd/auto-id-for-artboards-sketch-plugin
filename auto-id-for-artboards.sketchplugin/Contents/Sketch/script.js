@@ -1,13 +1,14 @@
-const { Document, Artboard } = require('sketch/dom')
-const UI = require('sketch/ui')
-const Settings = require('sketch/settings')
-const util = require('util')
-const { fnv1a } = require('./fnv1a')
+const { Document, Artboard } = require('sketch/dom');
+const UI = require('sketch/ui');
+const Settings = require('sketch/settings');
+const { toArray } = require('util');
+const { fnv1a } = require('./fnv1a');
 
-const defaultProjectPrefix = "MYPROJ"
+const defaultProjectPrefix = "MYPROJ";
 
 var onDocumentChanged = function (context) {
-    util.toArray(context.actionContext).forEach(c => {
+    const changes = toArray(context.actionContext);
+    changes.forEach(c => {
         if (c.object().isKindOfClass(NSClassFromString("MSArtboardGroup")) == false) {
             return;
         }
@@ -25,20 +26,20 @@ var onDocumentChanged = function (context) {
 }
 
 var updateProjectPrefix = function (_) {
-    var document = Document.getSelectedDocument()
-    var currentProjectPrefix = Settings.documentSettingForKey(document, 'project-prefix')
+    const document = Document.getSelectedDocument();
+    const currentProjectPrefix = Settings.documentSettingForKey(document, 'project-prefix');
 
     UI.getInputFromUser("Choose a project prefix for this document", {
         initialValue: currentProjectPrefix ?? defaultProjectPrefix
     }, (error, value) => {
         if (error) {
-            return
+            return;
         }
-        value = value.trim()
-        Settings.setDocumentSettingForKey(document, 'project-prefix', value)
+        value = value.trim();
+        Settings.setDocumentSettingForKey(document, 'project-prefix', value);
 
-        UI.message(`✅ The project prefix for this document is now: "${value}"`)
-    })
+        UI.message(`✅ The project prefix for this document is now: "${value}"`);
+    });
 }
 
 // ------------------
@@ -52,7 +53,7 @@ function stripExistingIDFromArtboardIfAny(artboard) {
     }
     const prefix = namePrefixForID(uuid);
     if (artboard.name.startsWith(prefix)) {
-        artboard.name = artboard.name.slice(prefix.length)
+        artboard.name = artboard.name.slice(prefix.length);
     }
     saveArtboardIDInUserInfo(artboard, null);
 }
@@ -74,7 +75,7 @@ function restoreIDNamePrefixForArtboardIfNeeded(artboard) {
     const expectedPrefix = namePrefixForID(uuid);
     // we trim the prefix to avoid re-installing it just because the trailing whitespace is deleted
     if (!artboard.name.startsWith(expectedPrefix.trim())) {
-        artboard.name = expectedPrefix + artboard.name
+        artboard.name = expectedPrefix + artboard.name;
     }
 }
 
@@ -83,10 +84,10 @@ function restoreIDNamePrefixForArtboardIfNeeded(artboard) {
 // ------------------
 
 function generateUniqueIDForArtboard(artboard) {
-    let document = artboard.parent.parent;
-    let projectPrefix = Settings.documentSettingForKey(document, 'project-prefix');
-    let meaningfulIDPart = fnv1a(artboard.id, { size: 32 }).toUpperCase();
-    return `${projectPrefix ?? defaultProjectPrefix}-${meaningfulIDPart}`
+    const document = artboard.parent.parent;
+    const projectPrefix = Settings.documentSettingForKey(document, 'project-prefix');
+    const meaningfulIDPart = fnv1a(artboard.id, { size: 32 }).toUpperCase();
+    return `${projectPrefix ?? defaultProjectPrefix}-${meaningfulIDPart}`;
 }
 
 function namePrefixForID(uuid) {
@@ -98,7 +99,7 @@ function namePrefixForID(uuid) {
  * @returns {string?}
  */
 function artboardIDFromUserInfo(artboard) {
-    let uuid = Settings.layerSettingForKey(artboard, 'uuid');
+    const uuid = Settings.layerSettingForKey(artboard, 'uuid');
     if (!uuid && artboard.sketchObject && artboard.sketchObject.userInfo()) {
         // backwards compatibility with the previous version of the plugin
         return artboard.sketchObject.userInfo()['exposed.internals.auto-id-for-artboards.uuid'];
@@ -112,5 +113,5 @@ function artboardIDFromUserInfo(artboard) {
  * @param {string?} uuid
  */
 function saveArtboardIDInUserInfo(artboard, uuid) {
-    Settings.setLayerSettingForKey(artboard, 'uuid', uuid)
+    Settings.setLayerSettingForKey(artboard, 'uuid', uuid);
 }
