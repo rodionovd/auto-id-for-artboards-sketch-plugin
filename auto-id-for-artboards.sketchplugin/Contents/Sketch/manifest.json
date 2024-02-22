@@ -1,15 +1,23 @@
 {
-  "author" : "",
-  "commands" : [{
-      "script" : "script.js",
-      "name" : "Auto ID for Artboards",
+  "author": "Dmitry Rodionov",
+  "commands": [
+    {
+      "script": "script.js",
+      "name": "Auto ID for Artboards",
       "handlers": {
         "onDocumentChanged": "onDocumentChanged"
       }
-    }],
-  "identifier" : "exposed.internals.auto-id-for-artboards",
-  "version" : "1.0",
-  "description" : "",
-  "authorEmail" : "",
-  "name" : "Auto ID for Artboards"
+    },
+    {
+      "name": "Update Project Prefix",
+      "identifier": "update-project-prefix",
+      "script": "script.js",
+      "handler": "updateProjectPrefix"
+    }
+  ],
+  "identifier": "exposed.internals.auto-id-for-artboards",
+  "version": "2.0",
+  "description": "Made for Oli 👋",
+  "authorEmail": "i.am.rodionovd@gmail.com",
+  "name": "Auto ID for Artboards"
 }

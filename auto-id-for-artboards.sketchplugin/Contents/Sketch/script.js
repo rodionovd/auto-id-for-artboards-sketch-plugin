@@ -1,4 +1,10 @@
+const { Document, Artboard } = require('sketch/dom')
+const UI = require('sketch/ui')
+const Settings = require('sketch/settings')
 const util = require('util')
+const { fnv1a } = require('./fnv1a')
+
+const defaultProjectPrefix = "MYPROJ"
 
 var onDocumentChanged = function (context) {
     util.toArray(context.actionContext).forEach(c => {
@@ -6,7 +12,7 @@ var onDocumentChanged = function (context) {
             return;
         }
         // See https://developer.sketch.com/plugins/document-changes for details on change types
-        const artboard = c.object()
+        const artboard = new Artboard({ sketchObject: c.object() });
         if (c.type() == 3 && !c.isMove()) {
             // a new artboard has been added
             return assignRandomIDToArtboard(artboard);
@@ -16,6 +22,23 @@ var onDocumentChanged = function (context) {
             return restoreIDNamePrefixForArtboardIfNeeded(artboard);
         }
     });
+}
+
+var updateProjectPrefix = function (_) {
+    var document = Document.getSelectedDocument()
+    var currentProjectPrefix = Settings.documentSettingForKey(document, 'project-prefix')
+
+    UI.getInputFromUser("Choose a project prefix for this document", {
+        initialValue: currentProjectPrefix ?? defaultProjectPrefix
+    }, (error, value) => {
+        if (error) {
+            return
+        }
+        value = value.trim()
+        Settings.setDocumentSettingForKey(document, 'project-prefix', value)
+
+        UI.message(`✅ The project prefix for this document is now: "${value}"`)
+    })
 }
 
 // ------------------
@@ -28,8 +51,8 @@ function stripExistingIDFromArtboardIfAny(artboard) {
         return;
     }
     const prefix = namePrefixForID(uuid);
-    if (artboard.name().startsWith(prefix)) {
-       artboard.name = artboard.name().slice(prefix.length) 
+    if (artboard.name.startsWith(prefix)) {
+        artboard.name = artboard.name.slice(prefix.length)
     }
     saveArtboardIDInUserInfo(artboard, null);
 }
@@ -38,7 +61,7 @@ function assignRandomIDToArtboard(artboard) {
     // in case we're dealing with a duplicate of an existing artboard
     stripExistingIDFromArtboardIfAny(artboard);
     const uuid = generateUniqueIDForArtboard(artboard);
-    artboard.name = namePrefixForID(uuid) + artboard.name();
+    artboard.name = namePrefixForID(uuid) + artboard.name;
     saveArtboardIDInUserInfo(artboard, uuid);
 }
 
@@ -46,8 +69,8 @@ function restoreIDNamePrefixForArtboardIfNeeded(artboard) {
     const uuid = artboardIDFromUserInfo(artboard);
     const expectedPrefix = namePrefixForID(uuid);
     // we trim the prefix to avoid re-installing it just because the trailing whitespace is deleted
-    if (uuid && !artboard.name().startsWith(expectedPrefix.trim())) {
-        artboard.name = expectedPrefix + artboard.name()
+    if (uuid && !artboard.name.startsWith(expectedPrefix.trim())) {
+        artboard.name = expectedPrefix + artboard.name
     }
 }
 
@@ -56,8 +79,10 @@ function restoreIDNamePrefixForArtboardIfNeeded(artboard) {
 // ------------------
 
 function generateUniqueIDForArtboard(artboard) {
-    // TODO: <rodionovd> this is not a unique ID by any means, but it's human-readable for illustrative purposes
-    return "ABC-" + artboard.objectID().slice(0, 6);
+    let document = artboard.parent.parent;
+    let projectPrefix = Settings.documentSettingForKey(document, 'project-prefix');
+    let meaningfulIDPart = fnv1a(artboard.id, { size: 32 }).toUpperCase();
+    return `${projectPrefix ?? defaultProjectPrefix}-${meaningfulIDPart}`
 }
 
 function namePrefixForID(uuid) {
@@ -69,7 +94,13 @@ function namePrefixForID(uuid) {
  * @returns {string?}
  */
 function artboardIDFromUserInfo(artboard) {
-    return (artboard.userInfo() ?? {})["exposed.internals.auto-id-for-artboards.uuid"];
+    let uuid = Settings.layerSettingForKey(artboard, 'uuid');
+    if (!uuid && artboard.sketchObject && artboard.sketchObject.userInfo()) {
+        // backwards compatibility with the previous version of the plugin
+        return artboard.sketchObject.userInfo()['exposed.internals.auto-id-for-artboards.uuid'];
+    }
+
+    return uuid;
 }
 
 /** 
@@ -77,11 +108,5 @@ function artboardIDFromUserInfo(artboard) {
  * @param {string?} uuid
  */
 function saveArtboardIDInUserInfo(artboard, uuid) {
-    let userInfo = NSMutableDictionary.dictionaryWithDictionary(artboard.userInfo() ?? {});
-    if (uuid) {
-        userInfo.setValue_forKey(uuid, "exposed.internals.auto-id-for-artboards.uuid");
-    } else {
-        userInfo.removeObjectForKey("exposed.internals.auto-id-for-artboards.uuid");
-    }
-    artboard.setUserInfo(userInfo);
+    Settings.setLayerSettingForKey(artboard, 'uuid', uuid)
 }
