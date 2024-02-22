@@ -1,5 +1,7 @@
 # Automatic ID tagging for artboards
 
+This Sketch plugin adds a unique non-removable ID prefix to each new artboard.
+
 Features:
 
 - Supports custom project prefixes (e.g. "ACME-0001", "MYPROJ-41141", etc) per document
