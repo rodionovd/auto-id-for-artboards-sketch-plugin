@@ -60,6 +60,7 @@ function stripExistingIDFromArtboardIfAny(artboard) {
 function assignRandomIDToArtboard(artboard) {
     // in case we're dealing with a duplicate of an existing artboard
     stripExistingIDFromArtboardIfAny(artboard);
+
     const uuid = generateUniqueIDForArtboard(artboard);
     artboard.name = namePrefixForID(uuid) + artboard.name;
     saveArtboardIDInUserInfo(artboard, uuid);
@@ -67,9 +68,12 @@ function assignRandomIDToArtboard(artboard) {
 
 function restoreIDNamePrefixForArtboardIfNeeded(artboard) {
     const uuid = artboardIDFromUserInfo(artboard);
+    if (!uuid) {
+        return;
+    }
     const expectedPrefix = namePrefixForID(uuid);
     // we trim the prefix to avoid re-installing it just because the trailing whitespace is deleted
-    if (uuid && !artboard.name.startsWith(expectedPrefix.trim())) {
+    if (!artboard.name.startsWith(expectedPrefix.trim())) {
         artboard.name = expectedPrefix + artboard.name
     }
 }
